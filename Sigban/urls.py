@@ -26,7 +26,7 @@ urlpatterns = [
     path('contabilidad/', include('apps.contabilidad.urls')),
     path('settings/', include('apps.configuracion.urls')),
     path('inventario/', include('apps.stock.urls')),
-    path('facturacion/', include('apps.facturacion.urls')),
+    # path('facturacion/', include('apps.facturacion.urls')),
     path('__debug__/', include('debug_toolbar.urls')),
     # path('nomina/', include('apps.nomina.urls')),
     # path('taxis/', include('apps.taxis.urls')),

@@ -318,7 +318,7 @@ def guardarMuni(request):
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-import requests
+
 def generate_request(url, params={}):
     response = requests.get(url, params=params)
 
@@ -408,10 +408,14 @@ class NumeracionApiView(APIView):
     serializer_class         = NumeracionSerializer
 
     def get(self, request, format=None):
-        num = numeracion.objects.all()
+        num = numeracion.objects.all().prefetch_related("numeracion_empresa")
         return Response(NumeracionSerializer(num, many = True).data)
 
-   
+    def post(self, request, format=True):
+        serializer = self.serializer_class(data=self.request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
     def put(self, request, format=None):
         pass
@@ -536,7 +540,11 @@ class VendedoresApiView(APIView):
         return Response(serializer.data)
 
     def put(self, request, format=None):
-        pass
+        vnd = VendedoresClientes.objects.get(id = request.data['id'])
+        serializer = self.serializer_class(instance = vnd,data=self.request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
     def delete(self, request, format=None):
         pass

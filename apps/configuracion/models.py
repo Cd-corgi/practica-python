@@ -340,10 +340,6 @@ class PlazosDecuentosClientes(models.Model):
         return self.tercero.nombreComercial
 
 
-
-
-
-
 class Impuestos(models.Model):
     """Model definition for Impuestos."""
     id         = models.AutoField(primary_key = True)
@@ -386,7 +382,7 @@ class Retenciones(models.Model):
        return self.nombre
 
 class RetencionesProveedor(models.Model):
-    """Model definition for Impuestos."""
+    """Model definition for RetencionesProveedor."""
     id         = models.AutoField(primary_key = True)
     tercero    = models.ForeignKey(Terceros, related_name="retencion_proveedor",on_delete=models.PROTECT)
     retencion  = models.ForeignKey(Retenciones, related_name="proveedor_retenciones",on_delete=models.PROTECT)
@@ -397,17 +393,17 @@ class RetencionesProveedor(models.Model):
     # TODO: Define fields here
 
     class Meta:
-        """Meta definition for Impuestos."""
+        """Meta definition for RetencionesProveedor."""
 
-        verbose_name = 'Impuestos'
-        verbose_name_plural = 'Impuestos'
+        verbose_name = 'Retenciones proveedor'
+        verbose_name_plural = 'Retenciones proveedores'
         db_table = 'retenciones_proveedor'
 
     def __str__(self):
         return self.retencion.nombre
 
 class RetencionesClientes(models.Model):
-    """Model definition for Impuestos."""
+    """Model definition for RetencionesClientes."""
     id         = models.AutoField(primary_key = True)
     tercero    = models.ForeignKey(Terceros, related_name="retencion_cliente",on_delete=models.PROTECT)
     retencion  = models.ForeignKey(Retenciones, related_name="cliente_retenciones",on_delete=models.PROTECT)
@@ -418,10 +414,10 @@ class RetencionesClientes(models.Model):
     # TODO: Define fields here
 
     class Meta:
-        """Meta definition for Impuestos."""
+        """Meta definition for RetencionesClientes."""
 
-        verbose_name = 'Impuestos'
-        verbose_name_plural = 'Impuestos'
+        verbose_name = 'Retenciones cliente'
+        verbose_name_plural = 'Retenciones clientes'
         db_table = 'retenciones_clientes'
 
     def __str__(self):
