@@ -174,6 +174,7 @@ class OrdenDeCompraAdmin(admin.ModelAdmin):
         'retencion',
         'descuento',
         'total',
+        'ingresada',
     )
     list_filter = ('numeracion', )
     search_fields = (
@@ -196,7 +197,7 @@ class OrdenDeCompraAdmin(admin.ModelAdmin):
     ordering = ('id',)
 
 
-@admin.register(DetalleOrden)
+@admin.register(OrdenDetalle)
 class DetalleOrdenAdmin(admin.ModelAdmin):
     list_display = (
         'id',
@@ -437,6 +438,7 @@ class PagosComprasAdmin(admin.ModelAdmin):
     list_display = (
         'id',
         'numeracion',
+        'tipoTransaccion',
         'numero',
         'ingreso',
         'factura',
@@ -446,7 +448,7 @@ class PagosComprasAdmin(admin.ModelAdmin):
         'fecha',
         'concepto',
         'ValorAbono',
-        'dto',
+        'descuento',
     )
     list_filter = ('numero',)
     search_fields = (
@@ -466,20 +468,7 @@ class PagosComprasAdmin(admin.ModelAdmin):
     ordering = ('id',)
 
 
-@admin.register(TipoTransaccion)
-class TipoTransaccionAdmin(admin.ModelAdmin):
-    '''Admin View for TipoTransaccion'''
 
-    list_display = (
-        'id',
-        'asociado',
-    )
-    list_filter = ('asociado',)
-    search_fields = (
-        'id',
-        'asociado',
-    )
-    ordering = ('id',)
 
 
 @admin.register(NotaDebito)
@@ -558,7 +547,7 @@ class NotaCreditoAdmin(admin.ModelAdmin):
 
     list_display = (
         'id',
-        'nuemracion',
+        'numeracion',
         'prefijo',
         'consecutivo',
         'numero',

@@ -1,7 +1,7 @@
 from django.db import models
 # from .manager import OrdenManager
 # Create your models here.
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from apps.configuracion.models import *
 from django.db.models.signals import post_save,post_delete
 
@@ -152,18 +152,19 @@ class OrdenDeCompra(models.Model):
     # TODO: Define the fields here
     id          = models.AutoField(primary_key=True)
     numeracion  = models.ForeignKey("configuracion.numeracion", related_name="numeracion_orden", on_delete=models.PROTECT)
-    numero      = models.CharField("Numero:", max_length=20)
-    consecutivo = models.IntegerField()
-    prefijo     = models.CharField("Prefijo:", max_length=20)
-    proveedor   = models.ForeignKey("configuracion.Terceros",on_delete=models.PROTECT, related_name="Orden_de_compra_tercero")
+    numero      = models.CharField("Numero:", max_length=20, blank=True, null=True)
+    consecutivo = models.IntegerField(blank=True, null=True)
+    prefijo     = models.CharField("Prefijo:", max_length=20,blank=True, null=True)
+    proveedor   = models.ForeignKey("configuracion.Terceros", related_name="Orden_proveedor",on_delete=models.PROTECT)
     fecha       = models.DateTimeField("Fecha:", auto_now=False, auto_now_add=False)
-    formaPago   = models.ForeignKey("configuracion.FormaPago", related_name="orden_forma_pago",on_delete=models.PROTECT)
+    formaPago   = models.ForeignKey("configuracion.FormaPago", related_name="orden_formaPago",on_delete=models.PROTECT)
     usuario     = models.ForeignKey("users.User", related_name="orden_usuario",on_delete=models.PROTECT)
-    observacion = models.TextField(default="")
+    observacion = models.TextField(default="", blank=True, null=True)
     subtotal    = models.FloatField()
     iva         = models.FloatField()
     retencion   = models.FloatField()
-    descuento   = models.FloatField()
+    ingresada   = models.BooleanField(default = False, blank=True, null=True)
+    descuento   = models.FloatField(default = 0)
     total       = models.FloatField()   
 
     class Meta:
@@ -175,17 +176,25 @@ class OrdenDeCompra(models.Model):
 
     def __str__(self):
         return self.numero
+    
+    
+    def save(self, *args, **kwargs):
+        self.consecutivo = self.numeracion.proximaFactura
+        self.prefijo     = self.numeracion.prefijo
+        self.numero      = self.numeracion.prefijo+'-'+str(self.numeracion.proximaFactura)
+        super(OrdenDeCompra, self).save(*args, **kwargs) # Call the real save() method
 
 
-class DetalleOrden(models.Model):
+
+class OrdenDetalle(models.Model):
     """Model definition for DettaleOrden"""
     # TODO: Define the fields here
     id          = models.AutoField(primary_key=True)
     orden       = models.ForeignKey(OrdenDeCompra, related_name="detalle_orden",on_delete=models.PROTECT)
-    producto    = models.ForeignKey(Productos, related_name="detalle_producto",on_delete=models.PROTECT)
+    producto    = models.ForeignKey(Productos, related_name="detalleOrden_productos",on_delete=models.PROTECT)
     cantidad    = models.IntegerField()
     valorUnidad = models.FloatField()
-    descuento   = models.FloatField()
+    descuento   = models.FloatField(default = 0)
     iva         = models.IntegerField()
 
     class Meta:
@@ -193,7 +202,7 @@ class DetalleOrden(models.Model):
 
         verbose_name = "Detalle de Orden"
         verbose_name_plural = "Detalle de Ordenes"
-        db_table = "detalleorden"
+        db_table = "ordendetalle"
 
     def __str__(self):
         return self.orden.numero
@@ -203,7 +212,7 @@ class ImpuestoOrden(models.Model):
     # TODO: Define the fields here
     id          = models.AutoField(primary_key=True)
     orden       = models.ForeignKey(OrdenDeCompra, related_name="impuesto_orden" ,on_delete=models.PROTECT)
-    impuesto    = models.ForeignKey("configuracion.Impuestos", related_name="impuesto_orden_impuesto",on_delete=models.PROTECT)
+    impuesto    = models.ForeignKey("configuracion.Impuestos", related_name="impuestos_orden",on_delete=models.PROTECT)
     base        = models.FloatField()
     procentaje  = models.FloatField()
     total       = models.FloatField()
@@ -222,8 +231,8 @@ class RetencionOrden(models.Model):
     """Model definition for RetencionOrden"""
     # TODO: Define the fields here
     id          = models.AutoField(primary_key=True)
-    orden       = models.ForeignKey(OrdenDeCompra, related_name="retencion_orden_orden", on_delete=models.PROTECT)
-    retencion   = models.ForeignKey("configuracion.Retenciones", related_name="retencion_orden_retencion",on_delete=models.PROTECT)
+    orden       = models.ForeignKey(OrdenDeCompra, related_name="retencion_orden", on_delete=models.PROTECT)
+    retencion   = models.ForeignKey("configuracion.Retenciones", related_name="retenciones_orden",on_delete=models.PROTECT)
     base        = models.FloatField()
     porcentaje  = models.FloatField()
     total       = models.FloatField()
@@ -233,7 +242,7 @@ class RetencionOrden(models.Model):
 
         verbose_name = "Retencion de orden"
         verbose_name_plural = "Retencion de ordenes"
-        db_table = "retencionorden"
+        db_table = "retencionesorden"
 
     def __str__(self):
         return self.orden.numero               
@@ -244,20 +253,20 @@ class Ingreso(models.Model):
     # TODO: Define fields here
     id          = models.AutoField(primary_key=True)
     numeracion  = models.ForeignKey("configuracion.numeracion", related_name="ingreso_numeracion",on_delete=models.PROTECT)
-    numero      = models.CharField("Numero:", max_length=20)
-    consecutivo = models.IntegerField()
+    numero      = models.CharField("Numero:", max_length=20, blank=True, null=True)
+    consecutivo = models.IntegerField(blank=True, null=True)
+    prefijo     = models.CharField("Prefijo:", max_length=20,blank=True, null=True)
     orden       = models.ForeignKey(OrdenDeCompra, related_name="ingreso_orden" , on_delete=models.PROTECT)
-    prefijo     = models.CharField("Prefijo:", max_length=20)
     factura     = models.CharField("Factura:", max_length=50)
     proveedor   = models.ForeignKey("configuracion.Terceros", related_name="ingreso_proveedor",on_delete=models.PROTECT)
     fecha       = models.DateField("Fecha:", auto_now=False, auto_now_add=False)
-    formaPago   = models.ForeignKey("configuracion.FormaPago", related_name="ingreso_forma_pago",on_delete=models.PROTECT)
+    formaPago   = models.ForeignKey("configuracion.FormaPago", related_name="ingreso_formaPago",on_delete=models.PROTECT)
     usuario     = models.ForeignKey("users.User", related_name="ingreso_usuario" ,on_delete=models.PROTECT)
-    observacion = models.TextField(default="")
+    observacion = models.TextField(default="", blank=True, null=True)
     subtotal    = models.FloatField()
     iva         = models.FloatField()
     retencion   = models.FloatField()
-    descuento   = models.FloatField()
+    descuento   = models.FloatField(default = 0)
     total       = models.FloatField()
 
     class Meta:
@@ -271,20 +280,26 @@ class Ingreso(models.Model):
     def __str__(self):
         """Unicode representation of Ingreso."""
         return self.numero 
+    
+    def save(self, *args, **kwargs):
+       self.consecutivo = self.numeracion.proximaFactura
+       self.prefijo     = self.numeracion.prefijo
+       self.numero      = self.numeracion.prefijo+'-'+str(self.numeracion.proximaFactura)
+       super(Ingreso, self).save(*args, **kwargs) # Call the real save() method
 
 class IngresoDetalle(models.Model):
     """Model definition for IngresoDetalle."""
 
     # TODO: Define fields here
     id               = models.AutoField(primary_key=True)
-    ingreso          = models.ForeignKey(Ingreso, related_name="ingreso_detalle_ingreso" ,on_delete=models.PROTECT)
+    ingreso          = models.ForeignKey(Ingreso, related_name="ingreso_detalle" ,on_delete=models.PROTECT)
     producto         = models.ForeignKey(Productos, related_name="ingreso_producto",on_delete=models.PROTECT)
     cantidad         = models.IntegerField()
-    fechaVencimiento = models.DateField("Fecha de vencimiento:", auto_now=False, auto_now_add=False)
+    fechaVencimiento = models.DateField("Fecha de vencimiento:", auto_now=False, auto_now_add=False, blank=True, null=True)
     laboratorio      = models.CharField("Laboratorio:", max_length=50)
     lote             = models.CharField("Lote:", max_length=50)
     valorUnidad      = models.FloatField()
-    descuento        = models.FloatField()
+    descuento        = models.FloatField(default = 0)
     iva              = models.IntegerField()
     
 
@@ -305,7 +320,7 @@ class ImpuestoIngreso(models.Model):
     # TODO: Define fields here
     id          = models.AutoField(primary_key=True)
     ingreso     = models.ForeignKey(Ingreso, related_name="impuesto_ingreso", on_delete=models.PROTECT)
-    impuesto    = models.ForeignKey("configuracion.Impuestos", related_name="impuesto_ingreso_impuesto",on_delete=models.PROTECT)
+    impuesto    = models.ForeignKey("configuracion.Impuestos", related_name="impuestos_ingreso",on_delete=models.PROTECT)
     base        = models.FloatField()
     procentaje  = models.FloatField()
     total       = models.FloatField()
@@ -327,7 +342,7 @@ class RetencionIngreso(models.Model):
     # TODO: Define fields here
     id          = models.AutoField(primary_key=True)
     ingreso     = models.ForeignKey(Ingreso, related_name="retencion_ingreso",on_delete=models.PROTECT)
-    retencion   = models.ForeignKey("configuracion.Retenciones", related_name="retecion_ingreso_retencion",on_delete=models.PROTECT)
+    retencion   = models.ForeignKey("configuracion.Retenciones", related_name="reteciones_ingreso",on_delete=models.PROTECT)
     base        = models.FloatField()
     procentaje  = models.FloatField()
     total       = models.FloatField()
@@ -349,11 +364,11 @@ class CxPCompras(models.Model):
     # TODO: Define fields here
     id                 = models.AutoField(primary_key=True)
     ingreso            = models.ForeignKey(Ingreso, related_name="cxpcompras_ingreso", on_delete=models.PROTECT)
-    factura            = models.CharField("Factura:", max_length=50)
-    formaPago          = models.ForeignKey(FormaPago, related_name="cxpcompras_forma_pago",on_delete=models.PROTECT)
-    fecha              = models.DateField("Fecha:", auto_now=False, auto_now_add=False)
-    fechaVencimiento   = models.DateField("Fecha de Vencimiento:", auto_now=False, auto_now_add=False)
-    observacion        = models.CharField("Observación:", max_length=120)
+    factura            = models.CharField("Factura:", max_length=50, blank=True, null=True)
+    formaPago          = models.ForeignKey(FormaPago, related_name="cxpcompras_formaPago",on_delete=models.PROTECT, blank=True, null=True)
+    fecha              = models.DateField("Fecha:", auto_now=False, auto_now_add=False, blank=True, null=True)
+    fechaVencimiento   = models.DateField("Fecha de Vencimiento:", auto_now=False, auto_now_add=False, blank=True, null=True)
+    observacion        = models.CharField("Observación:", max_length=120, blank=True, null=True)
     proveedor          = models.ForeignKey("configuracion.Terceros", related_name="cxpcompras_proveedor",on_delete=models.PROTECT)
     base               = models.FloatField(default=0)
     iva                = models.FloatField(default=0)
@@ -372,23 +387,57 @@ class CxPCompras(models.Model):
     def __str__(self):
         """Unicode representation of CxPCompras."""
         return self.ingreso.numero
+    
+    def save(self, *args, **kwargs):
+        self.fecha     = self.ingreso.fecha
+        self.factura   = self.ingreso.factura
+        self.formaPago = self.ingreso.formaPago
+        
+        if self.formaPago.nombre == 'CONTADO':
+            self.fechaVencimiento =  self.fecha
+        elif self.formaPago.nombre == 'CREDITO 30 DIAS':
+            self.fechaVencimiento =  self.fecha + timedelta(30)
+        elif self.formaPago.nombre == 'CREDITO 45 DIAS':
+            self.fechaVencimiento =  self.fecha + timedelta(45)
+        elif self.formaPago.nombre == 'CREDITO 60 DIAS':
+            self.fechaVencimiento =  self.fecha + timedelta(60)
+        elif self.formaPago.nombre == 'CREDITO 75 DIAS':
+            self.fechaVencimiento =  self.fecha + timedelta(75)
+        elif self.formaPago.nombre == 'CREDITO 90 DIAS':
+            self.fechaVencimiento =  self.fecha + timedelta(90)
+        elif self.formaPago.nombre == 'CREDITO 120 DIAS':
+            self.fechaVencimiento =  self.fecha + timedelta(120)
+        else:
+            self.fechaVencimiento =  self.fecha
+        super(CxPCompras, self).save(*args, **kwargs) # Call the real save() method
+
 
 class PagosCompras(models.Model):
     """Model definition for PagosCompras."""
 
+    # TIPO TRANSACCIÓN
+    SIN_FACTURA = '0'
+    CON_FACTURA = '1'
+
+    TIPO_TRANSACCION = (
+        (SIN_FACTURA, "Pago sin relación"),
+        (CON_FACTURA, "Pago con relación"),
+    )
+
     # TODO: Define fields here
-    id          = models.AutoField(primary_key=True)
-    numeracion  = models.ForeignKey("configuracion.numeracion", related_name="pagos_numeracion" ,on_delete=models.PROTECT)
-    numero      = models.CharField("Numero:", max_length=50)
-    ingreso     = models.ForeignKey(Ingreso, related_name="pagos_ingreso",on_delete=models.CASCADE)
-    factura     = models.CharField("Factura:", max_length=50)
-    consecutivo = models.CharField("Consecutivo:", max_length=50)
-    prefijo     = models.CharField("Prefijo:", max_length=50)
-    usuario     = models.ForeignKey("users.User", related_name="pagos_usuario",on_delete=models.PROTECT)
-    fecha       = models.DateField("Fecha:", auto_now=False, auto_now_add=False)
-    concepto    = models.TextField("Concepto:")
-    ValorAbono  = models.FloatField(default=0)
-    dto         = models.FloatField(default=0)
+    id              = models.AutoField(primary_key=True)
+    numeracion      = models.ForeignKey("configuracion.numeracion", related_name="pagos_numeracion" ,on_delete=models.PROTECT)
+    numero          = models.CharField("Numero:", max_length=20, blank=True, null=True)
+    consecutivo     = models.IntegerField(blank=True, null=True)
+    prefijo         = models.CharField("Prefijo:", max_length=20,blank=True, null=True)
+    tipoTransaccion = models.BooleanField('Tipo de transaccion:', choices = TIPO_TRANSACCION )
+    ingreso         = models.ForeignKey(Ingreso, related_name="pagos_ingreso",on_delete=models.PROTECT)
+    factura         = models.CharField("Factura:", max_length=50)
+    usuario         = models.ForeignKey("users.User", related_name="pagos_usuario",on_delete=models.PROTECT)
+    fecha           = models.DateField("Fecha:", auto_now=False, auto_now_add=False)
+    concepto        = models.TextField("Concepto:")
+    ValorAbono      = models.FloatField(default=0)
+    descuento       = models.FloatField(default=0)
 
     class Meta:
         """Meta definition for PagosCompras."""
@@ -401,31 +450,13 @@ class PagosCompras(models.Model):
         """Unicode representation of PagosCompras."""
         return self.ingreso.numero
         
-class TipoTransaccion(models.Model):
-    """Model definition for TipoTransaccion."""
-    # TIPO TRANSACCIÓN
-    CON_FACTURA = '1'
-    SIN_FACTURA = '0'
+    def save(self, *args, **kwargs):
+       self.consecutivo = self.numeracion.proximaFactura
+       self.prefijo     = self.numeracion.prefijo
+       self.numero      = self.numeracion.prefijo+'-'+str(self.numeracion.proximaFactura)
+       super(PagosCompras, self).save(*args, **kwargs) # Call the real save() method
+    
 
-    ASOCIADO_CHOICES = (
-        (CON_FACTURA, True),
-        (SIN_FACTURA, False),
-    )
-
-    # TODO: Define fields here
-    id       = models.AutoField(primary_key=True)
-    asociado = models.BooleanField('Asociado:', choices=ASOCIADO_CHOICES)
-
-    class Meta:
-        """Meta definition for TipoTransaccion."""
-
-        verbose_name = 'TipoTransaccion'
-        verbose_name_plural = 'TipoTransacciones'
-        db_table = 'tipotransaccion'
-
-    def __str__(self):
-        """Unicode representation of TipoTransaccion."""
-        return self.asociado
     
 class NotaDebito(models.Model):
 
@@ -442,19 +473,19 @@ class NotaDebito(models.Model):
     # TODO: Define fields here
     id              = models.AutoField(primary_key=True)
     tipoDeNota      = models.CharField("Tipo de nota:", max_length=50, choices=TIPO_DE_NOTA_CHOICES)
-    numero          = models.CharField("Numero:", max_length=50)
-    consecutivo     = models.IntegerField()
-    prefijo         = models.CharField("Prefijo:", max_length=50)
-    numeracion      = models.ForeignKey("configuracion.numeracion", related_name="nota_debito_numeracion",on_delete=models.PROTECT)
+    numero          = models.CharField("Numero:", max_length=20, blank=True, null=True)
+    consecutivo     = models.IntegerField(blank=True, null=True)
+    prefijo         = models.CharField("Prefijo:", max_length=20,blank=True, null=True)
+    numeracion      = models.ForeignKey("configuracion.numeracion", related_name="notaDebito_numeracion",on_delete=models.PROTECT)
     factura         = models.CharField("Factura:", max_length=50)
-    ingreso         = models.ForeignKey(Ingreso, related_name="nota_debito_ingreso",on_delete=models.PROTECT)
-    observacion     = models.TextField()
+    ingreso         = models.ForeignKey(Ingreso, related_name="notaDebito_ingreso",on_delete=models.PROTECT)
+    observacion     = models.TextField(default = "",blank=True, null=True)
     fecha           = models.DateField("Fecha:", auto_now=False, auto_now_add=False)
-    valorTotal      = models.FloatField()
-    iva             = models.FloatField()
-    retencion       = models.FloatField()
-    proveedor       = models.ForeignKey("configuracion.Terceros", related_name="nota_debito_proveedor",on_delete=models.PROTECT)
-    usuario         = models.ForeignKey("users.User", related_name="nota_debito_usuario",on_delete=models.PROTECT)
+    valorTotal      = models.FloatField(default = 0)
+    iva             = models.FloatField(default = 0)
+    retencion       = models.FloatField(default = 0)
+    proveedor       = models.ForeignKey("configuracion.Terceros", related_name="notaDebito_proveedor",on_delete=models.PROTECT)
+    usuario         = models.ForeignKey("users.User", related_name="notaDebito_usuario",on_delete=models.PROTECT)
 
     class Meta:
         """Meta definition for NotaDebito."""
@@ -466,6 +497,12 @@ class NotaDebito(models.Model):
     def __str__(self):
         """Unicode representation of NotaDebito."""
         return self.numero
+    
+    def save(self, *args, **kwargs):
+       self.consecutivo = self.numeracion.proximaFactura
+       self.prefijo     = self.numeracion.prefijo
+       self.numero      = self.numeracion.prefijo+'-'+str(self.numeracion.proximaFactura)
+       super(NotaDebito, self).save(*args, **kwargs) # Call the real save() method
 
 class NotaDebitoDetalle(models.Model):
     """Model definition for NotaDebitoDetalle."""
@@ -473,12 +510,12 @@ class NotaDebitoDetalle(models.Model):
     # TODO: Define fields here
 
     id          = models.AutoField(primary_key=True)
-    nota        = models.ForeignKey(NotaDebito, related_name="nota_debito_nota",on_delete=models.PROTECT)
-    producto    = models.ForeignKey(Productos, related_name="nota_producto",on_delete=models.PROTECT)
+    nota        = models.ForeignKey(NotaDebito, related_name="detalle_notaDebito",on_delete=models.PROTECT)
+    producto    = models.ForeignKey(Productos, related_name="producto_notaDebito",on_delete=models.PROTECT)
     lote        = models.CharField("Lote:", max_length=50)
     cantidad    = models.IntegerField()
     valorUnidad = models.FloatField()
-    iva         = models.FloatField()
+    iva         = models.FloatField(default = 0)
     subtotal    = models.FloatField()
 
     class Meta:
@@ -521,17 +558,17 @@ class NotaCredito(models.Model):
 
     # TODO: Define fields here
     id              = models.AutoField(primary_key=True)  
-    nuemracion      = models.ForeignKey("configuracion.numeracion", related_name="nota_credito_numeracion",on_delete=models.PROTECT)
-    prefijo         = models.CharField("Prefijo:", max_length=50)
-    consecutivo     = models.CharField("Consecutivo:", max_length=50)
-    numero          = models.CharField("Numero:", max_length=50)
+    numeracion      = models.ForeignKey("configuracion.numeracion", related_name="NotaCredito_numeracion",on_delete=models.PROTECT)
+    numero          = models.CharField("Numero:", max_length=20, blank=True, null=True)
+    consecutivo     = models.IntegerField(blank=True, null=True)
+    prefijo         = models.CharField("Prefijo:", max_length=20,blank=True, null=True)
     tipoNota        = models.CharField("Tipo de nota:", max_length=50, choices=TIPO_DE_NOTAS_CHOICES)
     tipoCorrecion   = models.CharField("Tipo de correccion:", max_length=50, choices=CORRECION_CHOICES , null=True, blank=True)
-    ingreso         = models.ForeignKey(Ingreso, related_name="nota_creedito_ingreso",on_delete=models.PROTECT)
-    proveedor       = models.ForeignKey("configuracion.Terceros", related_name="nota_credito_proveedor",on_delete=models.PROTECT)
+    ingreso         = models.ForeignKey(Ingreso, related_name="NotaCredito_ingreso",on_delete=models.PROTECT)
+    proveedor       = models.ForeignKey("configuracion.Terceros", related_name="NotaCredito_proveedor",on_delete=models.PROTECT)
     factura         = models.CharField("Factura:", max_length=50)
     contabilizado   = models.BooleanField(default=False)
-    observacion     = models.TextField()
+    observacion     = models.TextField(default = "", blank=True, null=True)
     numeroNota      = models.CharField("Numero de nota:", max_length=50, null=True, blank=True)
     
 
@@ -547,18 +584,24 @@ class NotaCredito(models.Model):
         """Unicode representation of NotaCredito."""
         return self.numero
     
+    def save(self, *args, **kwargs):
+       self.consecutivo = self.numeracion.proximaFactura
+       self.prefijo     = self.numeracion.prefijo
+       self.numero      = self.numeracion.prefijo+'-'+str(self.numeracion.proximaFactura)
+       super(NotaCredito, self).save(*args, **kwargs) # Call the real save() method
+    
 class DetalleNotaCredito(models.Model):
     """Model definition for DetalleNotaCredito."""
 
     # TODO: Define fields here
     id          = models.AutoField(primary_key=True)
-    nota        = models.ForeignKey(NotaCredito, related_name="detalle_nota" , on_delete=models.PROTECT)
-    producto    = models.ForeignKey(Productos, related_name = "detalle_ptodutco", on_delete=models.PROTECT)
+    nota        = models.ForeignKey(NotaCredito, related_name="detalle_NotaCredito" , on_delete=models.PROTECT)
+    producto    = models.ForeignKey(Productos, related_name = "prdoucto_notaCreditoDetalle", on_delete=models.PROTECT)
     lote        = models.CharField("Lote:", max_length=50)
     cantidad    = models.IntegerField()
-    valorUnidad = models.FloatField(default=0)
+    valorUnidad = models.FloatField()
     iva         = models.FloatField(default=0)
-    subtotal    = models.FloatField(default=0)
+    subtotal    = models.FloatField()
 
 
     class Meta:
