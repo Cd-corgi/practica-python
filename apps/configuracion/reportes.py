@@ -99,7 +99,7 @@ def pdfFactura():
         (5, 'Elmer', 'elmer@gmail.com', '2016-11-23'),
         (5, 'Elmer', 'elmer@gmail.com', '2016-11-23'),
         (5, 'Elmer', 'elmer@gmail.com', '2016-11-23'),
-    )#*8
+    )#*6
 
 
     pdf = reporte(orientation = 'P', unit = 'mm', format='A4') 
