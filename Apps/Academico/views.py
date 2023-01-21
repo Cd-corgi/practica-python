@@ -9,7 +9,6 @@ def home(request):
 
 def registrarCursos(request):
     if Curso.objects.filter(area = request.POST['txtArea']).exists():
-        messages.success(request, 'El area a agregar ya existe')
         return redirect('/')
     else:
         area        = request.POST['txtArea']
@@ -24,9 +23,6 @@ def registrarCursos(request):
 
 def eliminarCursos(request, area):
     cc = Curso.objects.get(area = area)
-
-    if Curso.objects.filter(area = cc) is None:
-        return messages.warning(request, 'El dato a eliminar no existe')
     
     cc.delete()
     return redirect('/')
