@@ -1,9 +1,8 @@
 from rest_framework import serializers
 from django.db import transaction
-<<<<<<< HEAD
-=======
+
 from .validations import *
->>>>>>> f58513177a9f48b4b59f095052d32872319ad21c
+
 # from .validations import validarCliente,validarProveedor
 from .models import *
 # from apps.configuracion.models import puc
@@ -11,9 +10,6 @@ from .models import *
 # from .serializers import TercerosCreateSerializer
 
 
-<<<<<<< HEAD
-
-=======
 def registrar_OrdenDeCompra(create, orden, ordenDetalle):
         orden = OrdenDeCompra()
         if create:
@@ -54,7 +50,6 @@ def registrar_OrdenDeCompra(create, orden, ordenDetalle):
                                 detalle.append(d)
                         OrdenDetalle.objects.bulk_create(detalle)
                 return orden
->>>>>>> f58513177a9f48b4b59f095052d32872319ad21c
 
 
 

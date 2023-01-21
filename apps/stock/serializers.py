@@ -69,8 +69,6 @@ class InventarioSerializer(serializers.ModelSerializer):
         response = super().to_representation(instance)
         return response
 
-<<<<<<< HEAD
-=======
 class OrdenDeCompraSerializer(serializers.ModelSerializer):
     numeracion  = NumeracionSerializer()
     proveedor   = TercerosCreateSerializer()
@@ -247,4 +245,3 @@ class DetalleNotaCreditoSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         response = super().to_representation(instance)
         return response
->>>>>>> f58513177a9f48b4b59f095052d32872319ad21c
