@@ -1,0 +1,67 @@
+{% extends './base.html' %}
+
+{% block title %} Prueba de campo {% endblock %}
+
+{% block body %}
+<h1 style="text-align: center;">Hola!</h1>
+
+<div class="row">
+    <div class="col-sm-12 col-md-6 col-lg-4 col-xl-4">
+        <h2>Gestion de Recursos</h2>
+        <div class="card">
+            <div class="card-body">
+                <form action="/registrarCursos/" method="POST">{% csrf_token %}
+                    <div class="form-group">
+                        <input type="text" name="txtArea" id="txtArea" minlength="3" placeholder="Area de estudio"
+                            class="form-control" required>
+                    </div>
+                    <br>
+                    <div class="form-group">
+                        <input type="number" name="txtNumero" id="txtNumero" min="0" class="form-control">
+                    </div>
+                    <br>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-success btn-block text-white" required>Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-12 col-md-6 col-lg-8 col-xl-8">
+        <h1>Listado de Areas</h1>
+        <div class="table-responsive py-2">
+            <table class="table table-striped">
+                <thead>
+                    <th>
+                        Area
+                    </th>
+                    <th>
+                        Creditos
+                    </th>
+                    <th colspan="">
+                        Opciones
+                    </th>
+                </thead>
+                <tbody>
+                    {% for c in cursos %}
+                    <tr>
+                        <td>{{c.area}}</td>
+                        <td>{{c.creditos}}</td>
+                        <td><a href="edicionCursos/{{c.area}}" class="btn btn-secondary">Editar</a></td>
+                        <td><a href="eliminarCursos/{{c.area}}" class="btn btn-danger">Eliminar</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<!-- <a href="#">Entrar como admin!</a>
+<ul>
+    {% for c in cursos %}
+    <li>{{c.area}} - {{c.creditos}} Creditos</li>
+    {% endfor %}
+
+    
+</ul> -->
+{% endblock %}
