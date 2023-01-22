@@ -1,0 +1,43 @@
+{% extends './base.html' %}
+
+{% block title %} Editar Area {% endblock %}
+
+{% block body %}
+<div class="container">
+    <h2>Gestion de Recursos</h2>
+    <div class="card">
+        <div class="card-body">
+            <form action="/editarArea/" method="POST">{% csrf_token %}
+                <div class="form-group">
+                    <input type="text" name="txtIDE" id="txtIdE" value="{{cursos.id}}" readonly minlength="3"
+                        placeholder="ID" class="form-control" required>
+                </div>
+                <br>
+                <div class="form-group">
+                    <input type="text" name="txtAreaE" id="txtAreaE" value="{{cursos.area}}" minlength="3"
+                        placeholder="Area de estudio" class="form-control" required>
+                </div>
+                <br>
+                <div class="form-group">
+                    <input type="number" name="txtNumeroE" id="txtNumeroE" value="{{cursos.creditos}}" min="0"
+                        class="form-control">
+                </div>
+                <br>
+                <div class="form-group">
+                    <select name="txtMenuE" id="txtMenuE" class="form-select" required>
+                        <option value="0" disabled="disabled">Seleccione un docente</option>
+                        {% for c in profesor%}
+                        <option value="{{c.documento}}">{{c.nombreCompleto}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <br>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-success btn-block text-white" id="Tratar"
+                        required>Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

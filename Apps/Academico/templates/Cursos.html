@@ -3,8 +3,6 @@
 {% block title %} Prueba de campo {% endblock %}
 
 {% block body %}
-<h1 style="text-align: center;">Hola!</h1>
-
 <div class="row">
     <div class="col-sm-12 col-md-6 col-lg-4 col-xl-4">
         <h2>Gestion de Recursos</h2>
@@ -21,7 +19,17 @@
                     </div>
                     <br>
                     <div class="form-group">
-                        <button type="submit" class="btn btn-success btn-block text-white" required>Guardar</button>
+                        <select name="txtMenu" id="txtMenu" class="form-select" required>
+                            <option value="0" disabled="disabled">Seleccione un Docente</option>
+                            {% for c in profesor%}
+                            <option value="{{c.documento}}">{{c.nombreCompleto}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <br>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-success btn-block text-white" id="Tratar"
+                            required>Guardar</button>
                     </div>
                 </form>
             </div>
@@ -32,6 +40,12 @@
         <div class="table-responsive py-2">
             <table class="table table-striped">
                 <thead>
+                    <th>
+                        #
+                    </th>
+                    <th>
+                        Docente
+                    </th>
                     <th>
                         Area
                     </th>
@@ -45,10 +59,13 @@
                 <tbody>
                     {% for c in cursos %}
                     <tr>
+                        <td>{{forloop.counter}}</td>
+                        <td>{{c.docente}}</td>
                         <td>{{c.area}}</td>
                         <td>{{c.creditos}}</td>
                         <td><a href="edicionCursos/{{c.area}}" class="btn btn-secondary">Editar</a></td>
-                        <td><a href="eliminarCursos/{{c.area}}" class="btn btn-danger">Eliminar</a></td>
+                        <td><a href="eliminarCursos/{{c.area}}" class="btn btn-danger btnEliminar">Eliminar</a>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -56,12 +73,4 @@
         </div>
     </div>
 </div>
-<!-- <a href="#">Entrar como admin!</a>
-<ul>
-    {% for c in cursos %}
-    <li>{{c.area}} - {{c.creditos}} Creditos</li>
-    {% endfor %}
-
-    
-</ul> -->
 {% endblock %}
