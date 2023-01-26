@@ -11,6 +11,8 @@ urlpatterns = [
     path('setProductos/', SetProduc, name="productos"),
     path('setInventario/', SetInven, name="productos"),
     path('getProductos/', getProductos, name="getProductos"),
+    path('ordenCompra/', ordenCompra, name="ordenCompra"),
+    path('ingreso/', ingresos, name="ingresos")
 
 
     # path('unidades/', UnidadApiView.as_view(), name="unidades"),

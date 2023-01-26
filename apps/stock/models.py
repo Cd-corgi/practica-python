@@ -178,13 +178,7 @@ class OrdenDeCompra(models.Model):
         return self.numero
     
     
-    def save(self, *args, **kwargs):
-        self.consecutivo = self.numeracion.proximaFactura
-        self.prefijo     = self.numeracion.prefijo
-        self.numero      = self.numeracion.prefijo+'-'+str(self.numeracion.proximaFactura)
-        super(OrdenDeCompra, self).save(*args, **kwargs) # Call the real save() method
-
-
+ 
 
 class OrdenDetalle(models.Model):
     """Model definition for DettaleOrden"""
@@ -279,14 +273,8 @@ class Ingreso(models.Model):
 
     def __str__(self):
         """Unicode representation of Ingreso."""
-        return self.numero 
+        return  str(self.numero)
     
-    def save(self, *args, **kwargs):
-       self.consecutivo = self.numeracion.proximaFactura
-       self.prefijo     = self.numeracion.prefijo
-       self.numero      = self.numeracion.prefijo+'-'+str(self.numeracion.proximaFactura)
-       super(Ingreso, self).save(*args, **kwargs) # Call the real save() method
-
 class IngresoDetalle(models.Model):
     """Model definition for IngresoDetalle."""
 
@@ -312,7 +300,7 @@ class IngresoDetalle(models.Model):
 
     def __str__(self):
         """Unicode representation of IngresoDetalle."""
-        pass
+        return self.ingreso.numero
 
 class ImpuestoIngreso(models.Model):
     """Model definition for ImpuestoIngreso."""
@@ -379,17 +367,17 @@ class CxPCompras(models.Model):
 
     class Meta:
         """Meta definition for CxPCompras."""
-
         verbose_name = 'CxPCompras'
         verbose_name_plural = 'CxPComprass'
         db_table = 'cxpcompras'
 
     def __str__(self):
         """Unicode representation of CxPCompras."""
-        return self.ingreso.numero
-    
+        return 'd'
+
     def save(self, *args, **kwargs):
-        self.fecha     = self.ingreso.fecha
+        
+        self.fecha     = datetime.strptime(self.ingreso.fecha,"%Y-%m-%d")
         self.factura   = self.ingreso.factura
         self.formaPago = self.ingreso.formaPago
         

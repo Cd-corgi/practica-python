@@ -164,8 +164,60 @@ def getProductos(request):
 
 
 
+@csrf_exempt
+@api_view(('GET', 'POST','PUT'))
+def ordenCompra(request):
+    if request.method == "GET":
+        orden = ListOrdenCompra()
+        return Response(OrdenDeCompraBasicSerializer(orden, many = True).data)
 
-            
+    if request.method == "POST":
+
+        orden = request.data['orden']
+        detalle = request.data['detalle']
+
+        ordenSave = registrar_OrdenDeCompra(True,orden,detalle)
+
+        ordenReturn = GetOrdenCompra(ordenSave.id)
+        return Response(OrdenDeCompraDetailSerializer(ordenReturn).data)
+    
+    if request.method == "PUT":
+
+        orden = request.data['orden']
+        detalle = request.data['detalle']
+
+        ordenUpdate = registrar_OrdenDeCompra(False,orden,detalle)
+
+        ordenReturn = GetOrdenCompra(ordenUpdate.id)
+        return Response(OrdenDeCompraDetailSerializer(ordenReturn).data)
+
+
+
+@csrf_exempt
+@api_view(('GET', 'POST', 'PUT'))
+def ingresos(request):
+    if request.method == "GET":
+        ingr = Ingreso.objects.all()
+        return Response(IngresoSerializer(ingr, many = True).data)
+
+    if request.method == "POST":
+
+        ingresar = request.data['ingreso']
+        detalle  = request.data['detalle']
+
+        guardarIngreso = registrar_Ingreso(True, ingresar, detalle)
+        
+        ingresoReturn = Ingreso.objects.get(id = guardarIngreso.id)
+        return Response(IngresoSerializer(ingresoReturn).data)
+
+    if request.method == "PUT":
+        ingresar = request.data['ingreso']
+        detalle  = request.data['detalle']
+
+        actualizarIngreso = registrar_Ingreso(False, ingresar, detalle)
+        
+        ingresoReturn = Ingreso.objects.get(id = actualizarIngreso.id)
+        return Response(IngresoSerializer(ingresoReturn).data)
 
 
 

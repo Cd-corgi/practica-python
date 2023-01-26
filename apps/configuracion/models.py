@@ -248,6 +248,7 @@ class Terceros(models.Model):
     codigoPostal                = models.CharField('codigoPostal', max_length=50, blank=True, null=True)
     saldoAFavorProveedor        = models.FloatField(default = 0,blank=True, null=True)
     saldoAFavorCliente          = models.FloatField(default = 0,blank=True, null=True)
+    isRetencion                 = models.BooleanField(default=False,blank=True, null=True)
     isCliente                   = models.BooleanField(default=False,blank=True, null=True)
     isProveedor                 = models.BooleanField(default=False,blank=True, null=True)
     isContabilidad              = models.BooleanField(default=False,blank=True, null=True)
@@ -265,15 +266,6 @@ class Terceros(models.Model):
     estado                      = models.BooleanField(default = True)
 
 
-    def save(self, *args, **kwargs):
-        if self.fecha_creacion:
-            self.fecha_modificacion = date.today()
-        else:
-            self.fecha_creacion     = date.today()
-            self.fecha_modificacion = date.today()
-                    
-        super(Terceros, self).save(*args, **kwargs)
-
     class Meta:
         """Meta definition for Tercero."""
 
@@ -286,7 +278,15 @@ class Terceros(models.Model):
         return self.nombreComercial
 
 
+    def save(self, *args, **kwargs):
 
+        if self.fecha_creacion:
+            self.fecha_modificacion = date.today()
+        else:
+            self.fecha_creacion     = date.today()
+            self.fecha_modificacion = date.today()
+                    
+        super(Terceros, self).save(*args, **kwargs)
 
 
 class PlazosDecuentosProveedores(models.Model):

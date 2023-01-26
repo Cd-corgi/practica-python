@@ -16,29 +16,29 @@ def saveTercero(create,tercero,descuentoCliente,descuentoProveedor,retencionesCl
         validarProveedor(tercero)
 
     t            = None
-    descuentoC   = None  
-    descuentoP   = None
-    retencionesC = None
-    retencionesP = None
+    # descuentoC   = None  
+    # descuentoP   = None
+    # retencionesC = None
+    # retencionesP = None
     id = 0
     if tercero['id']:
         id = tercero['id']
     if Terceros.objects.filter(id=id).exists():
         t            = Terceros.objects.get(id=tercero['id'])
-        if descuentoCliente:
-            descuentoC   = PlazosDecuentosClientes.objects.get(id=descuentoCliente['id']).delete()
-        if descuentoProveedor:
-            descuentoP   = PlazosDecuentosProveedores.objects.get(id=descuentoProveedor['id']).delete()
-        if retencionesClientes:
-            retencionesC = RetencionesClientes.objects.filter(tercero=t.id).delete()
-        if retencionesProveedor:
-            retencionesP = RetencionesProveedor.objects.filter(tercero=t.id).delete()
+        # if descuentoCliente:
+        #     descuentoC   = PlazosDecuentosClientes.objects.get(id=descuentoCliente['id']).delete()
+        # if descuentoProveedor:
+        #     descuentoP   = PlazosDecuentosProveedores.objects.get(id=descuentoProveedor['id']).delete()
+        # if retencionesClientes:
+        #     retencionesC = RetencionesClientes.objects.filter(tercero=t.id).delete()
+        # if retencionesProveedor:
+        #     retencionesP = RetencionesProveedor.objects.filter(tercero=t.id).delete()
     else:
         t            = Terceros()
-        descuentoC   = PlazosDecuentosClientes()  
-        descuentoP   = PlazosDecuentosProveedores()
-        retencionesC = RetencionesClientes()
-        retencionesP = RetencionesProveedor()
+        # descuentoC   = PlazosDecuentosClientes()  
+        # descuentoP   = PlazosDecuentosProveedores()
+        # retencionesC = RetencionesClientes()
+        # retencionesP = RetencionesProveedor()
     
 
     departamento     = Departamentos.objects.get(id = tercero['departamento'])
@@ -77,7 +77,7 @@ def saveTercero(create,tercero,descuentoCliente,descuentoProveedor,retencionesCl
     t.isCompras                = tercero['isCompras']
     t.isContabilidad           = tercero['isContabilidad']
     t.isElectronico            = tercero['isElectronico']
-    t.isPos                     = tercero['isPos']
+    t.isPos                    = tercero['isPos']
 
     if tercero['isProveedor']:
         p_pagar  = puc.objects.get(id = tercero['cuenta_x_pagar'])
@@ -88,50 +88,49 @@ def saveTercero(create,tercero,descuentoCliente,descuentoProveedor,retencionesCl
         
     with transaction.atomic():
         t.save()
-
-        if descuentoCliente:
-            descuentoC.tercero        = t
-            descuentoC.quince         = descuentoCliente['quince']
-            descuentoC.treinta        = descuentoCliente['treinta']
-            descuentoC.cuarentaYcinco = descuentoCliente['cuarentaycinco']
-            descuentoC.sesenta        = descuentoCliente['sesenta']
-            descuentoC.noventa        = descuentoCliente['noventa']
-            descuentoC.save()
+        # if descuentoCliente:
+        #     descuentoC.tercero        = t
+        #     descuentoC.quince         = descuentoCliente['quince']
+        #     descuentoC.treinta        = descuentoCliente['treinta']
+        #     descuentoC.cuarentaYcinco = descuentoCliente['cuarentaycinco']
+        #     descuentoC.sesenta        = descuentoCliente['sesenta']
+        #     descuentoC.noventa        = descuentoCliente['noventa']
+        #     descuentoC.save()
         
-        if descuentoProveedor: 
-            descuentoP.tercero        = t
-            descuentoP.quince         = descuentoProveedor['quince']
-            descuentoP.treinta        = descuentoProveedor['treinta']
-            descuentoP.cuarentaYcinco = descuentoProveedor['cuarentaycinco']
-            descuentoP.sesenta        = descuentoProveedor['sesenta']
-            descuentoP.noventa        = descuentoProveedor['noventa']
-            descuentoP.save()
+        # if descuentoProveedor: 
+        #     descuentoP.tercero        = t
+        #     descuentoP.quince         = descuentoProveedor['quince']
+        #     descuentoP.treinta        = descuentoProveedor['treinta']
+        #     descuentoP.cuarentaYcinco = descuentoProveedor['cuarentaycinco']
+        #     descuentoP.sesenta        = descuentoProveedor['sesenta']
+        #     descuentoP.noventa        = descuentoProveedor['noventa']
+        #     descuentoP.save()
         
-        if retencionesClientes:
+        # if retencionesClientes:
 
-            lista = []
-            for x in retencionesClientes:
-                j = x['retencion']
-                r = Retenciones.objects.get(id = j['id']) 
-                RTF = RetencionesClientes(
-                    tercero   = t,
-                    retencion = r,
-                    fija      = x['fija']
-                )
-                RTF.save()
-        if retencionesProveedor:
-            lista = []
-            for x in retencionesProveedor:
-                j = x['retencion']
-                print(j)
-                r = Retenciones.objects.get(id = j['id']) 
-                RTF = RetencionesProveedor(
-                    tercero   = t,
-                    retencion = r,
-                    fija      = x['fija']
-                )
-                RTF.save()
-    return t
+        #     lista = []
+        #     for x in retencionesClientes:
+        #         j = x['retencion']
+        #         r = Retenciones.objects.get(id = j['id']) 
+        #         RTF = RetencionesClientes(
+        #             tercero   = t,
+        #             retencion = r,
+        #             fija      = x['fija']
+        #         )
+        #         RTF.save()
+        # if retencionesProveedor:
+        #     lista = []
+        #     for x in retencionesProveedor:
+        #         j = x['retencion']
+        #         print(j)
+        #         r = Retenciones.objects.get(id = j['id']) 
+        #         RTF = RetencionesProveedor(
+        #             tercero   = t,
+        #             retencion = r,
+        #             fija      = x['fija']
+        #         )
+        #         RTF.save()
+        return t
 
 
 
