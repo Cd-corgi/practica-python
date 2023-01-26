@@ -246,7 +246,7 @@ def registrar_Ingreso(create, ingreso, ingresoDetalle):
 
                                         # actualizando Producto
                                         product.stock_inicial += d.cantidad
-                                        
+
                                         product.save()
 
 
@@ -271,7 +271,7 @@ def registrar_Ingreso(create, ingreso, ingresoDetalle):
                         num.save()
       
 
-                       
+                       #si
                   
                                 
 
