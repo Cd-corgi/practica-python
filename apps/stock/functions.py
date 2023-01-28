@@ -5,7 +5,11 @@ from .validations import *
 from datetime import datetime
 # from .validations import validarCliente,validarProveedor
 from .models import *
-# from apps.configuracion.models import puc
+from apps.configuracion.models import *
+from apps.contabilidad.models import *
+from apps.users.models import *
+
+from .interfaces import *
 
 # from .serializers import TercerosCreateSerializer
 
@@ -176,7 +180,7 @@ def registrar_Ingreso(create, ingreso, ingresoDetalle):
                 CuentaxP.base       = NewIngreso.subtotal
                 CuentaxP.iva        = NewIngreso.iva
                 CuentaxP.reteFuente = NewIngreso.retencion  
-                CuentaxP.total      = NewIngreso.total  
+                CuentaxP.valorTotal = NewIngreso.total  
 
 
                 # CuentaxP.reteIca    = NewIngreso.retencion 
@@ -195,6 +199,7 @@ def registrar_Ingreso(create, ingreso, ingresoDetalle):
 
                         detalle = []
                         for item in ingresoDetalle:
+                            
                                 # Inicializa las variables para poder agregar productos y kardex
                                 p                  = item['producto']
                                 d                  = IngresoDetalle()    
@@ -211,19 +216,25 @@ def registrar_Ingreso(create, ingreso, ingresoDetalle):
                                 d.lote             = item['lote']
                                 d.laboratorio      = item['laboratorio']
                                 d.fechaVencimiento = item['fechaVencimiento']
+                                if d.producto.impuesto:
+                                        d.iva = (d.valorUnidad * d.cantidad) * d.producto.impuesto.porcentaje / 100
+                                else:
+                                        d.iva = 0
 
-                                # Si el iva y descuento de ingreso detalle están vacios o nulos
-                                if item['iva'] == None or item['iva'] == '':
-                                        d.iva       = 0
-                                else :
-                                        d.iva = item['iva']                                        
+                                # Si el  y descuento de ingreso detalle están vacios o nulos                        
                                 if item['descuento'] == None or item['descuento'] == '':
                                         d.descuento = 0
                                 else:
                                         d.descuento = item['descuento']
 
+                                d.subtotal         = d.valorUnidad * d.cantidad
+                                d.total            = d.subtotal + d.iva - d.descuento
+                                 
                                 # Guarda los datos de ingreeso Detalle
+
                                 d.save()
+
+                                detalle.append(d)
 
                                 # Ahora se llama los datos del kardex a registrar
                                 k.descripcion = 'Ingreso No. '+d.ingreso.numero
@@ -239,7 +250,7 @@ def registrar_Ingreso(create, ingreso, ingresoDetalle):
                                 k.save()
 
                                 # validando el inventario
-                                if Inventario.objects.filter(idProducto = d.producto.id,lote = d.lote,laboratorio = d.laboratorio).exist():
+                                if Inventario.objects.filter(idProducto = d.producto.id,lote = d.lote,laboratorio = d.laboratorio).exists():
                                         producto          = Inventario.objects.get(idProducto = d.producto.id,lote = d.lote,laboratorio = d.laboratorio)
                                         producto.unidades +=  d.cantidad
                                         producto.save()
@@ -249,14 +260,13 @@ def registrar_Ingreso(create, ingreso, ingresoDetalle):
 
                                         product.save()
 
-
                                 else:
                                         # Registra nuevo producto en el inventario
                                         newProductInv = Inventario()
 
                                         # Se agisnan los datos
                                         newProductInv.bodega      = d.producto.bodega
-                                        newProductInv.idProducto  = d.producto.id
+                                        newProductInv.idProducto  = d.producto
                                         newProductInv.vencimiento = d.fechaVencimiento
                                         newProductInv.valorCompra = d.valorUnidad
                                         newProductInv.unidades    = d.cantidad
@@ -266,18 +276,22 @@ def registrar_Ingreso(create, ingreso, ingresoDetalle):
 
                                         # Guarda los datos
                                         newProductInv.save()
+                                        product.stock_inicial += d.cantidad
+                                        product.save()
+
+                        resultConta =  Contabilizar_Ingreso(NewIngreso,detalle,NewIngreso.proveedor)
+
+                        asiento               = resultConta['asiento']
+                        detalleConta          = resultConta['detalle']
+
+                        asiento.save()
+                        for x in detalleConta:
+                                x.save()
 
                         num.proximaFactura += 1
                         num.save()
-      
-
-                       #si
-                  
-                                
-
-
-
                 return NewIngreso
+
         else:
                 try:
                         NewIngreso = Ingreso.objects.get(id = ingreso['id'])
@@ -313,13 +327,17 @@ def registrar_Ingreso(create, ingreso, ingresoDetalle):
                         IngresoD.delete()
                         for item in ingresoDetalle:
                                 p                  = item['producto']
+                                
                                 product            = Productos.objects.get(id = p['id'])
-
                                 d                  = IngresoDetalle()
+
                                 d.ingreso          = NewIngreso
                                 d.producto         = product
                                 d.cantidad         = item['cantidad']
                                 d.valorUnidad      = item['valorUnidad']
+                                d.lote             = item['lote']
+                                d.laboratorio      = item['laboratorio']
+                                d.fechaVencimiento = item['fechaVencimiento']
                                 if item['iva'] == None or item['iva'] == '':
                                         d.iva       = 0
                                 else :
@@ -328,12 +346,135 @@ def registrar_Ingreso(create, ingreso, ingresoDetalle):
                                         d.descuento = 0
                                 else:
                                         d.descuento = item['descuento']
-                                detalle.append(d)
+                                d.save()
+                                
+                                # Buscando el Kardex a actualizar
+                                # try:
+                                #         objetoKardex = Kardex.objects.filter(producto = d.producto.id, ).exists()
+                                # except objetoKardex.ObjectDoesnotExist as e:
+                                #         raise serializers.Validationerror("No se pudo obtener el kardex")
+
+                                # objetoKardex.descripcion = 'Ingreso No. '+ d.ingreso.numero
+                                # objetoKardex.tipo        = 'IN'
+                                # objetoKardex.producto    = d.producto
+                                # objetoKardex.tercero     = d.ingreso.proveedor
+                                # objetoKardex.bodega      = d.producto.bodega
+                                # objetoKardex.unidades    = d.cantidad
+                                # # objetoKardex.balance     = 
+                                # objetoKardex.precio      = d.valorUnidad
+
+                                # objetoKardex.save()
+
+
+
+
+
                         IngresoDetalle.objects.bulk_create(detalle)
                 return NewIngreso                                                
 
 
+def Contabilizar_Ingreso(ingreso:Ingreso, detalleIngreso, tercero:Terceros):
+        empresa = Empresa.objects.get(id = 1)
 
+
+        movi = asiento()
+        movi.numero       =  ingreso.numero
+        movi.fecha        =  ingreso.fecha
+        movi.empresa      =  empresa
+        movi.concepto     =  "Compra segun Ingreso N°: "+ str(ingreso.numero)
+        movi.usuario      =  ingreso.usuario
+        movi.totalDebito  = 0
+        movi.totalCredito = 0
+
+        listaDetalleAsiento = []
+
+        lineaTercero = asientoDetalle()
+        lineaTercero.asiento  = movi
+        lineaTercero.tercero  = tercero
+        lineaTercero.cuenta   = tercero.cuenta_x_pagar
+        lineaTercero.credito  = ingreso.total
+
+
+        print("cuenta")
+        print(tercero.nombreComercial)
+
+        print(tercero.cuenta_x_pagar)
+
+        listaDetalleAsiento.append(lineaTercero)
+
+        if tercero.isRetencion:
+                retenciones = RetencionesProveedor.objects.filter(tercero = tercero.id)
+                for r in retenciones:
+                        print(r.retencion.compras)
+                        lineasRetencion = asientoDetalle()
+                        if r.fija:
+                                lineasRetencion.asiento  = movi
+                                lineasRetencion.tercero  = tercero
+                                lineasRetencion.cuenta   = r.retencion.compras
+                                lineasRetencion.credito  = ingreso.subtotal * r.retencion.porcentaje / 100
+                                listaDetalleAsiento.append(lineasRetencion)
+                        else:
+                                if r.retencion.base > 0 and ingreso.subtotal >= r.retencion.base:
+
+                                        lineasRetencion.asiento  = movi
+                                        lineasRetencion.tercero  = tercero
+                                        lineasRetencion.cuenta   = r.retencion.compras
+                                        lineasRetencion.credito  = ingreso.subtotal * r.retencion.porcentaje / 100
+                                        listaDetalleAsiento.append(lineasRetencion)
+                                else:
+                                        pass     
+
+        else:
+                pass
+
+
+        
+        if ingreso.iva > 0:
+                if Impuestos.objects.filter(nombre = "IVA (19%)").exists():
+                        imp =  Impuestos.objects.get(nombre = "IVA (19%)")
+                        detalle = asientoDetalle()
+
+                        detalle.asiento  = movi
+                        detalle.tercero  = tercero
+                        detalle.cuenta   = imp.compras
+                        detalle.debito   = ingreso.iva
+                        listaDetalleAsiento.append(detalle)
+
+
+
+        tiposDeMercancia = dict()
+        for x in detalleIngreso:
+                if x.producto.tipoProducto.nombre in tiposDeMercancia:
+                        nombre = x.producto.tipoProducto.nombre
+                        tiposDeMercancia[nombre].valor += x.subtotal 
+                else:
+                        nombre = x.producto.tipoProducto.nombre
+
+                        objecto:tiposMercancia = tiposMercancia(x.producto.tipoProducto,x.producto.tipoProducto.c_tipo,x.subtotal)
+
+                        tiposDeMercancia[nombre] = objecto
+                
+
+        for j in tiposDeMercancia:
+                detalle = asientoDetalle()
+                detalle.asiento  = movi
+                detalle.tercero  = tercero
+                detalle.cuenta   = tiposDeMercancia[j].tipoDeProducto.c_tipo
+
+                detalle.debito   = tiposDeMercancia[j].valor
+                listaDetalleAsiento.append(detalle)
+
+
+        resultado = dict()
+        resultado["asiento"] = movi
+        resultado["detalle"] = listaDetalleAsiento
+
+
+       
+
+
+        return resultado
+     
 def getProductos_SinStock():
         return Productos.objects.all().exclude(bodega=3).select_related('tipoProducto','bodega') 
     

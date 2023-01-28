@@ -6,6 +6,8 @@ from .manager import *
 
 from apps.users.models import User
 
+from datetime import datetime,date
+
 import locale
 # Setea la variable LC_ALL al conjunto de código UTF-8 con descripción español España
 #locale.setlocale(locale.LC_ALL,'es_ES.UTF-8')
@@ -66,15 +68,16 @@ class puc(models.Model):
 
 class asiento(models.Model):
     """Model definition for asiento."""
-    id           = models.AutoField(primary_key=True)
-    numero       = models.CharField('Asiento contable:', max_length=50,blank=False, null=False, unique = True)
-    fecha        = models.DateField('Fecha', auto_now=False, auto_now_add=False)
-    mes          = models.CharField('Mes:', max_length=50,blank=True, null=True)
-    anio         = models.CharField('Año:', max_length=50,blank=True, null=True)
-    empresa      = models.ForeignKey(to='configuracion.Empresa', related_name='asiento_empresa', on_delete=models.PROTECT)
-    usuario      = models.ForeignKey(User, related_name='asiento_usuario', on_delete=models.PROTECT)
-    totalDebito  = models.FloatField('Total crédito:')
-    totalCredito = models.FloatField('Total débito:')
+    id             = models.AutoField(primary_key=True)
+    numero         = models.CharField('Asiento contable:', max_length=50,blank=False, null=False, unique = True)
+    fecha          = models.DateField('Fecha', auto_now=False, auto_now_add=False)
+    mes            = models.CharField('Mes:', max_length=50,blank=True, null=True)
+    anio           = models.CharField('Año:', max_length=50,blank=True, null=True)
+    concepto       = models.CharField('Concepto:', max_length=500,blank=True, null=True)
+    empresa        = models.ForeignKey(to='configuracion.Empresa', related_name='asiento_empresa', on_delete=models.PROTECT)
+    usuario        = models.ForeignKey(User, related_name='asiento_usuario', on_delete=models.PROTECT)
+    totalDebito    = models.FloatField('Total crédito:')
+    totalCredito   = models.FloatField('Total débito:')
 
 
 
@@ -90,6 +93,7 @@ class asiento(models.Model):
         db_table = 'asiento'
 
     def save(self, *args, **kwargs):
+        self.fecha     = datetime.strptime(str(self.fecha),"%Y-%m-%d")
         self.mes  = self.fecha.strftime('%B')
         self.anio  = self.fecha.year
         super(asiento, self).save(*args, **kwargs)
@@ -121,7 +125,12 @@ class asientoDetalle(models.Model):
 
 
     def save(self, *args, **kwargs):
-        self.fecha = self.asiento.fecha
+    
+       
+        
+        # self.fecha = self.asiento.fecha
+        # print("Fecha: ",self.fecha)
+        self.fecha     = datetime.strftime(self.asiento.fecha,"%Y-%m-%d")
         self.mes   = self.asiento.fecha.strftime('%B')
         self.anio  = self.asiento.fecha.year
         super(asientoDetalle, self).save(*args, **kwargs)

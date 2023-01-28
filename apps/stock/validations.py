@@ -19,8 +19,6 @@ def ValidarIngreso(ingreso):
         raise serializers.ValidationError('La numeración no puede quedar nulo o vacio')
     if ingreso['orden'] == None or ingreso['orden'] == '':
         raise serializers.ValidationError("La orden no puede quedar nulo o vacaio")
-    if ingreso['proveedor'] == None or ingreso['proveedor'] == '':
-        raise serializers.ValidationError('El proveedor no puede quedar nulo o vacio')
     if ingreso['fecha'] == None or ingreso['fecha'] == '':
         raise serializers.ValidationError('La fecha no puede quedar nulo o vacio')
     if ingreso['usuario'] == None or ingreso['usuario'] == '':

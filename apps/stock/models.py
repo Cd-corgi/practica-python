@@ -63,7 +63,7 @@ class Productos(models.Model):
     tipoProducto      = models.ForeignKey(tipoProducto, related_name="productos_tipo_producto",on_delete=models.PROTECT)
     habilitado        = models.BooleanField(default = True)
     bodega            = models.ForeignKey(Bodega, on_delete=models.PROTECT)
-    impuesto          = models.ForeignKey("configuracion.Impuestos", related_name="productos_impuesto",on_delete=models.PROTECT)
+    impuesto          = models.ForeignKey("configuracion.Impuestos", blank=True, null=True, related_name="productos_impuesto",on_delete=models.PROTECT)
     codigoDeBarra     = models.CharField(max_length=50, blank=True, null=True)  # Field name made lowercase.
     unidad            = models.CharField('Unidad', max_length=150)
     usuario           = models.ForeignKey("users.User", related_name="productos_usuario",on_delete=models.PROTECT)
@@ -109,6 +109,7 @@ class Kardex(models.Model):
     tercero     = models.ForeignKey("configuracion.Terceros", related_name="kardexs_terceros",on_delete = models.PROTECT)
     bodega      = models.ForeignKey(Bodega, on_delete= models.PROTECT,related_name = "kardexs_bodega")
     unidades    = models.IntegerField()
+    fecha       = models.DateField("fecha:", auto_now=True, auto_now_add=False)
     balance     = models.IntegerField(default= 0)
     precio      = models.FloatField()
 
@@ -289,7 +290,8 @@ class IngresoDetalle(models.Model):
     valorUnidad      = models.FloatField()
     descuento        = models.FloatField(default = 0)
     iva              = models.IntegerField()
-    
+    subtotal         = models.FloatField()
+    total            = models.FloatField()
 
     class Meta:
         """Meta definition for IngresoDetalle."""

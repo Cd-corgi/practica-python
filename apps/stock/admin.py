@@ -54,16 +54,11 @@ class InventarioAdmin(admin.ModelAdmin):
     )
     list_filter = ('vencimiento',)
     search_fields = (
-        'id',
-        'bodega',
+    
         'idProducto',
-        'vencimiento',
-        'valorCompra',
-        'unidades',
-        'lote',
-        'estado'
+    
     )
-    ordering = ('id',)
+    ordering = ('-id',)
 
 
 @admin.register(Productos)
@@ -96,7 +91,7 @@ class productosAdmin(admin.ModelAdmin):
         'modificado',
         'nombreymarcaunico',
     )
-    list_filter = ('nombre',)
+    list_filter = ('tipoProducto', 'bodega', 'Filtro')
     search_fields = (
         'id',
         'nombre',
@@ -134,6 +129,7 @@ class KardexAdmin(admin.ModelAdmin):
         'id',
         'descripcion',
         'tipo',
+        'fecha',
         'producto',
         'tercero',
         'bodega',
@@ -141,11 +137,12 @@ class KardexAdmin(admin.ModelAdmin):
         'balance',
         'precio'
     )
-    list_filter = ('producto',)
+    list_filter = ('producto', 'fecha')
     search_fields = (
         'id',
         'descripcion',
         'tipo',
+        'fecha',
         'producto',
         'tercero',
         'bodega',

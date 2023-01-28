@@ -204,6 +204,7 @@ def ingresos(request):
 
         ingresar = request.data['ingreso']
         detalle  = request.data['detalle']
+       
 
         guardarIngreso = registrar_Ingreso(True, ingresar, detalle)
         
